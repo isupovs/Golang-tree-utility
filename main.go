@@ -36,17 +36,17 @@ func dirTreeFormat(out io.Writer, path string, printFiles bool, prepend string) 
 
 	for idx, info := range infos {
 		last := idx == len(infos)-1
-		if idx != 0 || prepend != "" {
-			fmt.Fprint(out, "\n")
+		var startChar string
+		if last {
+			startChar = bEnd
+		} else {
+			startChar = bStart
 		}
+		if info.IsDir() || printFiles {
+			fmt.Fprintf(out, "%s%s%s\n", prepend, startChar+hor, info.Name())
+		}
+
 		if info.IsDir() {
-			var startChar string
-			if last {
-				startChar = bEnd
-			} else {
-				startChar = bStart
-			}
-			fmt.Fprintf(out, "%s%s%s", prepend, startChar+hor, info.Name())
 			var p string
 			if last {
 				p = ""
@@ -56,8 +56,6 @@ func dirTreeFormat(out io.Writer, path string, printFiles bool, prepend string) 
 
 			dirTreeFormat(out, fmt.Sprintf("%s%c%s", path, os.PathSeparator, info.Name()), printFiles,
 				fmt.Sprintf("%s%s\t", prepend, p))
-		} else if printFiles {
-
 		}
 	}
 	return nil
