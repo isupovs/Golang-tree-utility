@@ -32,23 +32,19 @@ func dirTreeFormat(out io.Writer, path string, printFiles bool, prepend string) 
 		panic(e)
 	}
 
-	infos = filter(infos, func(f os.FileInfo) bool { return f.IsDir() })
+	if !printFiles {
+		infos = filter(infos, func(f os.FileInfo) bool { return f.IsDir() })
+	}
 
 	for idx, info := range infos {
-		last := idx == len(infos)-1
-		var startChar string
-		if last {
-			startChar = bEnd
-		} else {
-			startChar = bStart
-		}
+		isLast := idx == len(infos)-1
 		if info.IsDir() || printFiles {
-			fmt.Fprintf(out, "%s%s%s\n", prepend, startChar+hor, info.Name())
+			fmt.Fprintln(out, formatName(&info, prepend, isLast))
 		}
 
 		if info.IsDir() {
 			var p string
-			if last {
+			if isLast {
 				p = ""
 			} else {
 				p = vert
@@ -69,4 +65,23 @@ func filter(vs []os.FileInfo, f func(os.FileInfo) bool) []os.FileInfo {
 		}
 	}
 	return vsf
+}
+
+func formatName(fileInfo *os.FileInfo, prepend string, isLast bool) string {
+	var startChar string
+	if isLast {
+		startChar = bEnd
+	} else {
+		startChar = bStart
+	}
+	res := prepend + startChar + hor + (*fileInfo).Name()
+	if !(*fileInfo).IsDir() {
+		size := (*fileInfo).Size()
+		if size == 0 {
+			res += " (empty)"
+		} else {
+			res += fmt.Sprintf(" (%vb)", size)
+		}
+	}
+	return res
 }
